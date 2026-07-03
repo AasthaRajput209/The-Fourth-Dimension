@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Fourth Dimension — A Time-Based Immersive Space</title>
+  <meta name="description" content="An interactive 3D digital sculpture where time is the primary dimension of interaction, and scroll is secondary. Reward your curiosity.">
+  <link rel="stylesheet" href="style.css">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+  
+  <!-- Import Map for Modern Three.js Imports -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <!-- GSAP CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
+</head>
+<body>
+  <!-- Cinematic Enter Gate (Required for Web Audio API Autoplay Policy) -->
+  <div id="enter-gate" class="enter-gate">
+    <div class="enter-content">
+      <h1 class="enter-title">THE FOURTH DIMENSION</h1>
+      <p class="enter-subtitle">Patience is the only currency here.</p>
+      <button id="btn-enter" class="btn-enter">Enter Space</button>
+    </div>
+  </div>
+
+  <!-- WebGL Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Ambient Rain Overlay (CSS Drop Effects) -->
+  <div id="rain-overlay" class="rain-overlay"></div>
+
+  <!-- Heads Up Display (HUD) -->
+  <div id="hud" class="hud hidden">
+    <!-- Top Bar -->
+    <div class="hud-top">
+      <div class="hud-brand">
+        <span class="hud-dot"></span>
+        <span id="active-act">ACT I: ARRIVAL</span>
+      </div>
+      <div class="hud-time">
+        <span id="real-time">16:41</span>
+        <span class="hud-sep">|</span>
+        <span id="real-season">SUMMER</span>
+      </div>
+    </div>
+
+    <!-- Center Light-Reveal Typography Area -->
+    <div class="hud-center">
+      <div class="reveal-container">
+        <h2 id="emerging-text" class="emerging-text">TIME CHISELS THE WALLS WE BUILD</h2>
+        <p id="emerging-sub" class="emerging-sub">The architecture bends to patience, not speed.</p>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="hud-bottom">
+      <div class="hud-stats">
+        <div class="stat-group">
+          <label>SESSION TIME</label>
+          <span id="session-timer">00:00</span>
+        </div>
+        <div class="stat-group">
+          <label>CUMULATIVE VISITS</label>
+          <span id="visit-count">1ST VISIT</span>
+        </div>
+        <div class="stat-group">
+          <label>TOTAL EXPERIENCE</label>
+          <span id="total-time">00:00</span>
+        </div>
+      </div>
+
+      <!-- Navigation Assistance (Scroll hint) -->
+      <div id="scroll-hint" class="scroll-hint">
+        <div class="mouse-icon">
+          <span class="mouse-wheel"></span>
+        </div>
+        <span>SCROLL TO WALK</span>
+      </div>
+
+      <!-- Audio Controller -->
+      <div class="hud-audio">
+        <div class="audio-waves" id="audio-visualizer">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <button id="btn-mute" class="btn-mute" aria-label="Mute Audio">Mute</button>
+      </div>
+    </div>
+
+    <!-- Secret Notification Overlay -->
+    <div id="secret-notice" class="secret-notice hidden">
+      <span class="notice-icon">✦</span>
+      <span class="notice-text">Visit 10: Secret Exhibition Room unlocked. Scroll forward to step through the wall.</span>
+    </div>
+  </div>
+
+  <!-- Interactive Debug & Simulation Panel (Toggled with Tab or click) -->
+  <div id="debug-panel" class="debug-panel collapsed">
+    <div class="debug-header" id="debug-toggle">
+      <h3>CHRONOS CONTROL</h3>
+      <span class="toggle-icon">▲</span>
+    </div>
+    <div class="debug-content">
+      <div class="debug-section">
+        <h4>Time Acceleration</h4>
+        <div class="btn-row">
+          <button id="btn-ff-15" class="btn-debug">Fast Forward 15s</button>
+          <button id="btn-ff-60" class="btn-debug">Fast Forward 1m</button>
+        </div>
+        <div class="btn-row">
+          <button id="btn-ff-300" class="btn-debug">Fast Forward 5m</button>
+          <button id="btn-reset-time" class="btn-debug reset">Reset Time</button>
+        </div>
+      </div>
+      
+      <div class="debug-section">
+        <h4>Environment & Seasons</h4>
+        <div class="btn-row">
+          <button id="btn-tod-morning" class="btn-debug active-sim">Morning</button>
+          <button id="btn-tod-sunset" class="btn-debug">Sunset</button>
+          <button id="btn-tod-night" class="btn-debug">Night</button>
+        </div>
+        <div class="btn-row">
+          <button id="btn-seas-summer" class="btn-debug active-sim">Summer</button>
+          <button id="btn-seas-winter" class="btn-debug">Winter</button>
+        </div>
+        <div class="btn-row">
+          <button id="btn-weather-sunny" class="btn-debug active-sim">Sunny</button>
+          <button id="btn-weather-rain" class="btn-debug">Rainy</button>
+        </div>
+      </div>
+
+      <div class="debug-section">
+        <h4>Memory Simulation</h4>
+        <div class="btn-row">
+          <button id="btn-sim-visit" class="btn-debug">Simulate 10th Visit</button>
+          <button id="btn-sim-dormant" class="btn-debug">Simulate Long Absence</button>
+        </div>
+        <div class="btn-row">
+          <button id="btn-clear-mem" class="btn-debug reset">Clear Memory</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core App Scripts -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
